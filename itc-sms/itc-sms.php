@@ -226,18 +226,22 @@ class itc_sms{
         global $itc_sms_mysqli, $itc_sms_table_name;
 
         if(isset($_POST["del_id"])){
-            $del_id = $_POST["del_id"];
+            $del_arr = array();
+            $del_arr = $_POST["del_id"];
 
-            // Database connection
-            //$itc_sms_mysqli = itc_sms::db_connection();
+            $i = 0;
+            do{
+                $del_id = $del_arr[$i];
 
-            // Query creation
-            $query = "UPDATE $itc_sms_table_name
-                      SET del = 1
-                      WHERE ID = $del_id";
+                // Query creation
+                $query = "UPDATE $itc_sms_table_name
+                          SET del = 1
+                          WHERE ID = $del_id";
 
-            // Query send
-            $itc_sms_mysqli->query($query);
+                // Query send
+                $itc_sms_mysqli->query($query);
+
+            } while(++$i < count($del_arr));
         }
     }
 
@@ -438,7 +442,7 @@ class wp_admin_table extends WP_List_Table{
     public function column_name($item) {
         $actions = array(
             'edit'    => sprintf('<a onclick="mod_user(%u)" href="#/edit/%u">Modifica</a>',$item['ID'],$item['ID']),
-            'delete'  => sprintf('<a onclick="del_user(%u)" href="">Rimuovi</a>',$item['ID']),
+            'delete'  => sprintf('<a onclick="del_user(%u,%i)" href="">Rimuovi</a>',$item['ID'],0),
         );
         return sprintf('%1$s %2$s', $item['Nome'], $this->row_actions($actions));
     }
