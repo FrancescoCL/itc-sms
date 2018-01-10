@@ -20,14 +20,14 @@ if(!class_exists( 'WP_List_Table' )){
 }
 
 /** CSV FILE NAME (date based) **/
-global $csv_name;
+global $itc_sms_csv_name;
 $date_array = getdate();
 // File name format: 'itc iscritti gg/mm/aaaa.csv'
-$csv_name = "itc iscritti " . $date_array['mday'] . "-" . $date_array['mon'] . "-" . $date_array['year'] . ".csv";
+$itc_sms_csv_name = "itc iscritti " . $date_array['mday'] . "-" . $date_array['mon'] . "-" . $date_array['year'] . ".csv";
 
 /** TABLE NAME **/
-global $table_name;
-$table_name = "itc_sms_users";
+global $itc_sms_table_name;
+$itc_sms_table_name = "itc_sms_users";
 
 
 /** ************ **/
@@ -75,13 +75,13 @@ class itc_sms{
 
         /** TABLE CREATION **/
         /** Globals **/
-        global $mysql, $table_name;
+        global $itc_sms_mysqli, $itc_sms_table_name;
 
         // Connection to database
-        $mysql = itc_sms::db_connection();
+        $itc_sms_mysqli = itc_sms::db_connection();
         
         // Query
-        $query = "CREATE TABLE $table_name(
+        $query = "CREATE TABLE $itc_sms_table_name(
               ID INT NOT NULL AUTO_INCREMENT,
               Nome VARCHAR(30) NOT NULL,
               Cognome VARCHAR(30) NOT NULL,
@@ -91,7 +91,7 @@ class itc_sms{
               PRIMARY KEY(ID))";
 
         // Send query
-        $mysql->query($query);
+        $itc_sms_mysqli->query($query);
     }
 
 
@@ -170,16 +170,16 @@ class itc_sms{
 
     /** Connection to database **/
     public function db_connection(){
-        global $mysql;
+        global $itc_sms_mysqli;
 
-        $mysql = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
-        if ($mysql->connect_error) return ('');
-        else return $mysql;
+        $itc_sms_mysqli = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
+        if ($itc_sms_mysqli->connect_error) return ('');
+        else return $itc_sms_mysqli;
     }
 
     /** Add into the table the received data **/
     public function send_data(){
-        global $mysql, $table_name;
+        global $itc_sms_mysqli, $itc_sms_table_name;
 
         if (isset($_POST["name"])) {
             $name = trim($_POST["name"]);
@@ -189,17 +189,17 @@ class itc_sms{
 
             // Query creation
             $query = "INSERT 
-                      INTO $table_name (Nome,Cognome,Telefono,email,del)
+                      INTO $itc_sms_table_name (Nome,Cognome,Telefono,email,del)
                       VALUES ('$name','$surname','$telephone','$email',0)";
 
             // Query send
-            $mysql->query($query);
+            $itc_sms_mysqli->query($query);
         }
     }
 
     /** Modify selected user's data **/
     public function modify_data(){
-        global $mysql, $table_name;
+        global $itc_sms_mysqli, $itc_sms_table_name;
 
         if(isset($_POST["mod_id"])){
             $id = $_POST["mod_id"];
@@ -209,7 +209,7 @@ class itc_sms{
             $email = trim($_POST["new_email"]);
 
             // Query creation
-            $query = "UPDATE $table_name
+            $query = "UPDATE $itc_sms_table_name
                       SET Nome = '$name', 
                           Cognome = '$surname', 
                           Telefono = '$telephone', 
@@ -217,52 +217,52 @@ class itc_sms{
                       WHERE ID = $id";
 
             // Query send
-            $mysql->query($query);
+            $itc_sms_mysqli->query($query);
         }
     }
 
     /** Remove selected user from database **/
     public function delete_data(){
-        global $mysql, $table_name;
+        global $itc_sms_mysqli, $itc_sms_table_name;
 
         if(isset($_POST["del_id"])){
             $del_id = $_POST["del_id"];
 
             // Database connection
-            //$mysql = itc_sms::db_connection();
+            //$itc_sms_mysqli = itc_sms::db_connection();
 
             // Query creation
-            $query = "UPDATE $table_name
+            $query = "UPDATE $itc_sms_table_name
                       SET del = 1
                       WHERE ID = $del_id";
 
             // Query send
-            $mysql->query($query);
+            $itc_sms_mysqli->query($query);
         }
     }
 
     /** Create a csv file of the table **/
     public function export_data(){
-        global $csv_name, $mysql, $table_name;
+        global $itc_sms_csv_name, $itc_sms_mysqli, $itc_sms_table_name;
 
         if(isset($_POST["sub_flag"])){
             $sub_flag = $_POST["sub_flag"];
 
             // Query creation
             if($sub_flag){
-                $query = "SELECT * FROM $table_name WHERE del != 1
+                $query = "SELECT * FROM $itc_sms_table_name WHERE del != 1
                           ORDER BY Nome ASC";
             }
             else{
-                $query = "SELECT * FROM $table_name
+                $query = "SELECT * FROM $itc_sms_table_name
                           ORDER BY Nome ASC";
             }
 
             // Send query
-            $export_data = $mysql->query($query);
+            $export_data = $itc_sms_mysqli->query($query);
 
             // File creation
-            $fp = fopen($csv_name, 'w');
+            $fp = fopen($itc_sms_csv_name, 'w');
             $title_array = ["ID","Nome","Cognome","Telefono","email","Iscritto"];
             fputcsv($fp,$title_array,',','"');
             while ($row = mysqli_fetch_array($export_data,MYSQLI_ASSOC)){
@@ -277,7 +277,7 @@ class itc_sms{
 
     /** Receive a csv file and updates the user's table **/
     public function import_data(){
-        global $mysql, $table_name;
+        global $itc_sms_mysqli, $itc_sms_table_name;
 
         if(isset($_POST["file"])){
             $data_string = $_POST["file"];
@@ -304,7 +304,7 @@ class itc_sms{
                 }
 
                 // Query creation
-                $query = "UPDATE $table_name
+                $query = "UPDATE $itc_sms_table_name
                           SET Nome = '$name', 
                               Cognome = '$surname', 
                               Telefono = '$telephone', 
@@ -313,7 +313,7 @@ class itc_sms{
                           WHERE ID = $data_array[$i]";
 
                 // Send query
-                $mysql->query($query);
+                $itc_sms_mysqli->query($query);
             }
         }
     }
@@ -339,14 +339,14 @@ class itc_sms{
 
     /** Export page render **/
     public function display_export_user(){
-        global $csv_name;
-		html_export_user($csv_name);
+        global $itc_sms_csv_name;
+		html_export_user($itc_sms_csv_name);
 	}
 
     /** Import page render **/
     public function display_import_user(){
-        global $csv_name;
-		html_import_user($csv_name);
+        global $itc_sms_csv_name;
+		html_import_user($itc_sms_csv_name);
         
     }
 
@@ -471,14 +471,14 @@ class wp_admin_table extends WP_List_Table{
     /** ********************* **/
 
     public function table_data(){
-        global $mysql, $table_name;
+        global $itc_sms_mysqli, $itc_sms_table_name;
 
         if(isset($_POST['s'])){
             $search = $_POST['s'];
             $search = trim($search);
 
-            $db_data = $mysql->query("SELECT * FROM $table_name WHERE del=0 AND (Nome LIKE '$search%' OR Cognome LIKE '$search%')");
-        } else $db_data = $mysql->query("SELECT * FROM $table_name WHERE del=0");
+            $db_data = $itc_sms_mysqli->query("SELECT * FROM $itc_sms_table_name WHERE del=0 AND (Nome LIKE '$search%' OR Cognome LIKE '$search%')");
+        } else $db_data = $itc_sms_mysqli->query("SELECT * FROM $itc_sms_table_name WHERE del=0");
 
         $n_row = mysqli_num_rows($db_data);
 
@@ -492,6 +492,8 @@ class wp_admin_table extends WP_List_Table{
 
             } while(++$i < $n_row);
         } else $data = array();
+
+        mysqli_free_result($db_data);
 
         return $data;
     }
