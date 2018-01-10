@@ -3,21 +3,23 @@
 /**   Author: Francesco Casadei Lelli   **/
 /** *********************************** **/
 
+
 /** *********** **/
 /**  FUNCTIONS  **/
 /** *********** **/
 
 /** BULK ACTIONS FUNCTIONS **/
 function bulk_actions(js_selected){
+    var to_del = [];
     if(js_selected === 'delete'){
         jQuery("input:checkbox:checked").each(function(){
             var js_check_ID = jQuery(this).val();
-            if(js_check_ID !== undefined) del_user(js_check_ID);
+            if(js_check_ID !== 'on'){
+                to_del.push(js_check_ID);
+            }
         });
+        del_user(to_del);
     }
-    jQuery(document).ready(function(){
-        location.reload();
-    });
 }
 
 /** SWITCH FROM TABLE TO USER MODIFY **/
@@ -38,7 +40,9 @@ function mod_user(id){
 /** REMOVE USER **/
 function del_user(id){
     var data = {'action' : 'delete_data','del_id' : id};
-    jQuery.post(ajaxurl, data, function(){});
+    jQuery.post(ajaxurl, data, function(){
+        location.reload();
+    });
 }
 
 /** CLIENT SIDE MAIL CHECK FUNCTION **/
